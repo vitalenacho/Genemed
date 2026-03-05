@@ -1,5 +1,6 @@
 import { IPrecioProducto } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IPrecioProducto";
 import { MyGlobal } from "../../MyGlobal";
+import { LoggerProvider } from "./LoggerProvider";
 
 // IVA rules:
 // VENTA_LIBRE → 10.5% (1050 bps)
@@ -13,8 +14,18 @@ const IVA_POR_TIPO_VENTA: Record<string, number> = {
 };
 
 export namespace PrecioProductoProvider {
-  export const calcularIva = (tipoVenta: string): number =>
-    IVA_POR_TIPO_VENTA[tipoVenta] ?? 0;
+  export const calcularIva = (tipoVenta: string): number => {
+    const alicuota = IVA_POR_TIPO_VENTA[tipoVenta];
+    if (alicuota === undefined) {
+      LoggerProvider.warn(
+        `tipo_venta desconocido: "${tipoVenta}". Se aplica IVA 0%.`,
+        "PrecioProductoProvider",
+        { tipoVenta },
+      );
+      return 0;
+    }
+    return alicuota;
+  };
 
   export const calcularNeto = (precioFinal: number, alicuotaBps: number): number => {
     if (alicuotaBps === 0) return precioFinal;
