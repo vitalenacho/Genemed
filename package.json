@@ -1,15 +1,15 @@
 {
-  "name": "@ORGANIZATION/PROJECT-backend",
+  "name": "@CallOROut/Genemed-backend",
   "version": "0.1.0",
-  "description": "Backend for PROJECT",
+  "description": "Backend for Genemed",
   "scripts": {
     "benchmark": "rimraf prisma/migrations && node bin/test/benchmark",
-    "test": "rimraf prisma/migrations && node bin/test",
+    "test": "rimraf prisma/migrations && DB_PROVIDER=mysql node bin/test",
     "------------------------BUILDS------------------------": "",
     "build": "npm run build:prisma && npm run build:sdk && npm run build:main && npm run build:test",
     "build:api": "rimraf packages/api/lib && nestia all && tsc -p packages/api/tsconfig.json && rollup -c packages/api/rollup.config.js",
     "build:main": "rimraf lib && tsc",
-    "build:prisma": "prisma generate --schema=prisma/schema/schema.mysql.prisma",
+    "build:prisma": "node -e \"const p=process.env.DB_PROVIDER||'mysql'; const file = p==='mysql'? 'schema.mysql.prisma' : 'schema.postgres.prisma'; require('child_process').execSync(`prisma generate --schema=prisma/schema/${file}`, {stdio:'inherit'});\"",
     "build:sdk": "rimraf src/api/functional && nestia sdk",
     "build:swagger": "nestia swagger",
     "build:test": "rimraf bin && tsc -p test/tsconfig.json",
@@ -28,7 +28,8 @@
     "start:dev": "nest start --watch",
     "start:swagger": "ts-node src/executable/swagger.ts",
     "schema": "ts-node src/executable/schema",
-    "schema:mysql": "ts-node src/executable/schema"
+    "schema:postgres": "DB_PROVIDER=postgresql ts-node src/executable/schema",
+    "schema:mysql": "DB_PROVIDER=mysql ts-node src/executable/schema"
   },
   "repository": {
     "type": "git",

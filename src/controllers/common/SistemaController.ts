@@ -1,8 +1,8 @@
+import { IBackup } from "@CallOROut/Genemed-api/lib/structures/common/IBackup";
+import { ILogAuditoria } from "@CallOROut/Genemed-api/lib/structures/common/ILogAuditoria";
+import { ISincronizacionPrecios } from "@CallOROut/Genemed-api/lib/structures/common/ISincronizacionPrecios";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IBackup } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IBackup";
-import { ILogAuditoria } from "@ORGANIZATION/PROJECT-api/lib/structures/common/ILogAuditoria";
-import { ISincronizacionPrecios } from "@ORGANIZATION/PROJECT-api/lib/structures/common/ISincronizacionPrecios";
 
 @Controller("sistema")
 export class SistemaController {

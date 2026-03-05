@@ -1,6 +1,6 @@
+import { IHabilitacionAlmacen } from "@CallOROut/Genemed-api/lib/structures/common/IHabilitacionAlmacen";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IHabilitacionAlmacen } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IHabilitacionAlmacen";
 
 @Controller("habilitaciones")
 export class HabilitacionController {

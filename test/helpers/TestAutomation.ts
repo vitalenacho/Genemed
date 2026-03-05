@@ -1,7 +1,6 @@
+import api from "@CallOROut/Genemed-api";
 import { DynamicExecutor } from "@nestia/e2e";
 import { sleep_for } from "tstl";
-
-import api from "@ORGANIZATION/PROJECT-api";
 
 import { MyConfiguration } from "../../src/MyConfiguration";
 import { MySetupWizard } from "../../src/setup/MySetupWizard";

@@ -1,4 +1,5 @@
-import { IPrecioProducto } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IPrecioProducto";
+import { IPrecioProducto } from "@CallOROut/Genemed-api/lib/structures/common/IPrecioProducto";
+
 import { MyGlobal } from "../../MyGlobal";
 import { LoggerProvider } from "./LoggerProvider";
 
@@ -27,12 +28,18 @@ export namespace PrecioProductoProvider {
     return alicuota;
   };
 
-  export const calcularNeto = (precioFinal: number, alicuotaBps: number): number => {
+  export const calcularNeto = (
+    precioFinal: number,
+    alicuotaBps: number,
+  ): number => {
     if (alicuotaBps === 0) return precioFinal;
     return Math.round((precioFinal * 10000) / (10000 + alicuotaBps));
   };
 
-  export const calcularFinal = (precioNeto: number, alicuotaBps: number): number => {
+  export const calcularFinal = (
+    precioNeto: number,
+    alicuotaBps: number,
+  ): number => {
     return precioNeto + Math.round((precioNeto * alicuotaBps) / 10000);
   };
 
@@ -57,7 +64,9 @@ export namespace PrecioProductoProvider {
         precio_neto: precioNeto,
         precio_final: precioFinal,
         vigente_desde: new Date(input.vigente_desde),
-        vigente_hasta: input.vigente_hasta ? new Date(input.vigente_hasta) : null,
+        vigente_hasta: input.vigente_hasta
+          ? new Date(input.vigente_hasta)
+          : null,
         fuente: input.fuente ?? null,
         creado_por,
         actualizado_por: creado_por,

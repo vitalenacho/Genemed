@@ -1,6 +1,6 @@
+import { IFamiliaProducto } from "@CallOROut/Genemed-api/lib/structures/common/IFamiliaProducto";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IFamiliaProducto } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IFamiliaProducto";
 
 @Controller("familias-productos")
 export class FamiliaProductoController {
@@ -10,12 +10,16 @@ export class FamiliaProductoController {
   }
 
   @core.TypedRoute.Get(":id")
-  public async obtener(@core.TypedParam("id") _id: string): Promise<IFamiliaProducto> {
+  public async obtener(
+    @core.TypedParam("id") _id: string,
+  ): Promise<IFamiliaProducto> {
     return null!;
   }
 
   @core.TypedRoute.Post()
-  public async crear(@core.TypedBody() _body: IFamiliaProducto.ICrear): Promise<IFamiliaProducto> {
+  public async crear(
+    @core.TypedBody() _body: IFamiliaProducto.ICrear,
+  ): Promise<IFamiliaProducto> {
     return null!;
   }
 

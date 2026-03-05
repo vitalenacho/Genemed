@@ -1,7 +1,7 @@
 {
-  "name": "@ORGANIZATION/PROJECT-api",
+  "name": "@CallOROut/Genemed-api",
   "version": "0.1.0",
-  "description": "API for PROJECT",
+  "description": "API for Genemed",
   "main": "lib/index.js",
   "module": "lib/index.mjs",
   "typings": "lib/index.d.ts",

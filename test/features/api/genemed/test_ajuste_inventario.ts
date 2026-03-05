@@ -1,4 +1,4 @@
-import api from "@ORGANIZATION/PROJECT-api";
+import api from "@CallOROut/Genemed-api";
 import typia from "typia";
 
 /**

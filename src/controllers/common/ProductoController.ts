@@ -1,7 +1,7 @@
+import { IPrecioProducto } from "@CallOROut/Genemed-api/lib/structures/common/IPrecioProducto";
+import { IProducto } from "@CallOROut/Genemed-api/lib/structures/common/IProducto";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IPrecioProducto } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IPrecioProducto";
-import { IProducto } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IProducto";
 
 @Controller("productos")
 export class ProductoController {
@@ -16,7 +16,9 @@ export class ProductoController {
   }
 
   @core.TypedRoute.Post()
-  public async crear(@core.TypedBody() _body: IProducto.ICrear): Promise<IProducto> {
+  public async crear(
+    @core.TypedBody() _body: IProducto.ICrear,
+  ): Promise<IProducto> {
     return null!;
   }
 

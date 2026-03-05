@@ -1,6 +1,6 @@
+import { IProveedor } from "@CallOROut/Genemed-api/lib/structures/common/IProveedor";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IProveedor } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IProveedor";
 
 @Controller("proveedores")
 export class ProveedorController {
@@ -10,12 +10,16 @@ export class ProveedorController {
   }
 
   @core.TypedRoute.Get(":id")
-  public async obtener(@core.TypedParam("id") _id: string): Promise<IProveedor> {
+  public async obtener(
+    @core.TypedParam("id") _id: string,
+  ): Promise<IProveedor> {
     return null!;
   }
 
   @core.TypedRoute.Post()
-  public async crear(@core.TypedBody() _body: IProveedor.ICrear): Promise<IProveedor> {
+  public async crear(
+    @core.TypedBody() _body: IProveedor.ICrear,
+  ): Promise<IProveedor> {
     return null!;
   }
 

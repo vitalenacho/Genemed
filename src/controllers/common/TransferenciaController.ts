@@ -1,6 +1,6 @@
+import { ITransferenciaAlmacen } from "@CallOROut/Genemed-api/lib/structures/common/ITransferenciaAlmacen";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { ITransferenciaAlmacen } from "@ORGANIZATION/PROJECT-api/lib/structures/common/ITransferenciaAlmacen";
 
 @Controller("transferencias")
 export class TransferenciaController {

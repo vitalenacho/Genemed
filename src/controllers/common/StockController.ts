@@ -1,6 +1,6 @@
+import { IStockAlmacen } from "@CallOROut/Genemed-api/lib/structures/common/IStockAlmacen";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IStockAlmacen } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IStockAlmacen";
 
 @Controller("stocks")
 export class StockController {
@@ -12,7 +12,9 @@ export class StockController {
   }
 
   @core.TypedRoute.Get(":id")
-  public async obtener(@core.TypedParam("id") _id: string): Promise<IStockAlmacen> {
+  public async obtener(
+    @core.TypedParam("id") _id: string,
+  ): Promise<IStockAlmacen> {
     return null!;
   }
 

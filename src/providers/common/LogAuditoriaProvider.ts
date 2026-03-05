@@ -1,9 +1,12 @@
+import { ILogAuditoria } from "@CallOROut/Genemed-api/lib/structures/common/ILogAuditoria";
 import { Prisma } from "@prisma/sdk";
-import { ILogAuditoria } from "@ORGANIZATION/PROJECT-api/lib/structures/common/ILogAuditoria";
+
 import { MyGlobal } from "../../MyGlobal";
 
 export namespace LogAuditoriaProvider {
-  export const registrar = async (input: ILogAuditoria.ICrear): Promise<void> => {
+  export const registrar = async (
+    input: ILogAuditoria.ICrear,
+  ): Promise<void> => {
     await MyGlobal.prisma.log_auditoria.create({
       data: {
         usuario_id: input.usuario_id ?? null,

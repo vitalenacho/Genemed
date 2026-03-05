@@ -1,6 +1,6 @@
+import { IVenta } from "@CallOROut/Genemed-api/lib/structures/common/IVenta";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IVenta } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IVenta";
 
 @Controller("ventas")
 export class VentaController {

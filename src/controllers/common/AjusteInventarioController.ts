@@ -1,6 +1,6 @@
+import { IAjusteInventario } from "@CallOROut/Genemed-api/lib/structures/common/IAjusteInventario";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IAjusteInventario } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IAjusteInventario";
 
 @Controller("ajustes-inventario")
 export class AjusteInventarioController {
@@ -10,7 +10,9 @@ export class AjusteInventarioController {
   }
 
   @core.TypedRoute.Get(":id")
-  public async obtener(@core.TypedParam("id") _id: string): Promise<IAjusteInventario> {
+  public async obtener(
+    @core.TypedParam("id") _id: string,
+  ): Promise<IAjusteInventario> {
     return null!;
   }
 
@@ -47,7 +49,9 @@ export class AjusteInventarioController {
   }
 
   @core.TypedRoute.Delete(":id")
-  public async cancelar(@core.TypedParam("id") _id: string): Promise<IAjusteInventario> {
+  public async cancelar(
+    @core.TypedParam("id") _id: string,
+  ): Promise<IAjusteInventario> {
     return null!;
   }
 }

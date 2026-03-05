@@ -1,6 +1,6 @@
+import { IAlmacen } from "@CallOROut/Genemed-api/lib/structures/common/IAlmacen";
 import core from "@nestia/core";
 import { Controller } from "@nestjs/common";
-import { IAlmacen } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IAlmacen";
 
 @Controller("almacenes")
 export class AlmacenController {
@@ -15,7 +15,9 @@ export class AlmacenController {
   }
 
   @core.TypedRoute.Post()
-  public async crear(@core.TypedBody() _body: IAlmacen.ICrear): Promise<IAlmacen> {
+  public async crear(
+    @core.TypedBody() _body: IAlmacen.ICrear,
+  ): Promise<IAlmacen> {
     return null!;
   }
 

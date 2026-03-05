@@ -1,7 +1,6 @@
+import { IRecordMerge } from "@CallOROut/Genemed-api/lib/structures/common/IRecordMerge";
 import { DMMF } from "@prisma/client/runtime/client";
 import { Prisma } from "@prisma/sdk";
-
-import { IRecordMerge } from "@ORGANIZATION/PROJECT-api/lib/structures/common/IRecordMerge";
 
 import { MyGlobal } from "../../MyGlobal";
 import { EntityUtil } from "../../utils/EntityUtil";
