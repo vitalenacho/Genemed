@@ -112,7 +112,7 @@ export namespace EntityUtil {
       }
 
       // REMOVE TO BE MERGED RECORD
-      await (MyGlobal.prisma[table] as any).deleteMany({
+      await ((MyGlobal.prisma as any)[table] as any).deleteMany({
         where: {
           [key.name]: { in: props.absorbed },
         },
