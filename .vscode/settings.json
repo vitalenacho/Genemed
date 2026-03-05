@@ -14,14 +14,14 @@
     {
       "ssh": "Disabled",
       "previewLimit": 50,
-      "server": "127.0.0.1",
-      "port": 5432,
-      "driver": "PostgreSQL",
-      "name": "Genemed",
-      "database": "db_name",
-      "username": "db_account",
-      "password": "samchon"
+      "server": "localhost",
+      "port": 3306,
+      "driver": "MySQL",
+      "name": "Genemed (MySQL)",
+      "database": "",
+      "username": "root",
+      "password": "ipsx4w"
     }
   ],
-  "prisma.schema": "prisma/schema/main.prisma",
+  "prisma.schema": "prisma/schema/schema.mysql.prisma",
 }

@@ -1,4 +1,3 @@
-import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/sdk";
 
 import { MyGlobal } from "../MyGlobal";
@@ -11,80 +10,75 @@ async function execute(
   script: string,
 ): Promise<void> {
   try {
+    const env = MyGlobal.env;
+    const connectionString = `mysql://${username}:${password}@${env.MYSQL_HOST}:${env.MYSQL_PORT}/${database}`;
     const prisma = new PrismaClient({
-      adapter: new PrismaPg(
-        {
-          connectionString: `postgresql://${username}:${password}@${MyGlobal.env.POSTGRES_HOST}:${MyGlobal.env.POSTGRES_PORT}/${database}?schema=${MyGlobal.env.POSTGRES_SCHEMA}`,
+      // `accelerateUrl` satisfies Prisma's engine validation when running
+      // with engine type "client". It is harmless in this context.
+      accelerateUrl: connectionString,
+      __internal: {
+        configOverride: (c: any) => {
+          const ds = c.datasources ?? {};
+          return {
+            ...c,
+            datasources: {
+              ...ds,
+              db: { ...(ds.db ?? {}), url: connectionString },
+            },
+          };
         },
-        { schema: MyGlobal.env.POSTGRES_SCHEMA },
-      ),
-    });
+      },
+    } as any);
+
     const queries: string[] = script
       .split("\n")
       .map((str) => str.trim())
       .filter((str) => !!str);
-    for (const query of queries)
+    for (const query of queries) {
       try {
         await prisma.$queryRawUnsafe(query);
-      } catch (e) {
+      } catch {
         await prisma.$disconnect();
       }
+    }
     await prisma.$disconnect();
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
 }
 
 async function main(): Promise<void> {
+  const env = MyGlobal.env;
   const config = {
-    database: MyGlobal.env.POSTGRES_DATABASE,
-    schema: MyGlobal.env.POSTGRES_SCHEMA,
-    username: MyGlobal.env.POSTGRES_USERNAME,
-    readonlyUsername: MyGlobal.env.POSTGRES_USERNAME_READONLY,
-    password: MyGlobal.env.POSTGRES_PASSWORD,
+    database: env.MYSQL_DATABASE!,
+    username: env.MYSQL_USERNAME!,
+    readonlyUsername: env.MYSQL_USERNAME_READONLY!,
+    password: env.MYSQL_PASSWORD!,
   };
   const root = {
-    account: process.argv[2] ?? "postgres",
-    password: process.argv[3] ?? "root",
+    account: process.argv[2] ?? "root",
+    password: process.argv[3] ?? "ipsx4w",
   };
 
   await execute(
-    "postgres",
+    "mysql",
     root.account,
     root.password,
     `
-        CREATE USER ${config.username} WITH ENCRYPTED PASSWORD '${config.password}';
-        ALTER ROLE ${config.username} WITH CREATEDB
-        CREATE DATABASE ${config.database} OWNER ${config.username};
-    `,
-  );
+        CREATE DATABASE IF NOT EXISTS \`${config.database}\`;
+        CREATE USER IF NOT EXISTS '${config.username}'@'%' IDENTIFIED BY '${config.password}';
+        GRANT ALL PRIVILEGES ON \`${config.database}\`.* TO '${config.username}'@'%';
 
-  await execute(
-    config.database,
-    root.account,
-    root.password,
-    `
-        CREATE SCHEMA ${config.schema} AUTHORIZATION ${config.username};
-    `,
-  );
-
-  await execute(
-    config.database,
-    root.account,
-    root.password,
-    `
-        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ${config.schema} TO ${config.username};
-
-        CREATE USER ${config.readonlyUsername} WITH ENCRYPTED PASSWORD '${config.password}';
-        GRANT USAGE ON SCHEMA ${config.schema} TO ${config.readonlyUsername};
-        GRANT SELECT ON ALL TABLES IN SCHEMA ${config.schema} TO ${config.readonlyUsername};
-    `,
+        CREATE USER IF NOT EXISTS '${config.readonlyUsername}'@'%' IDENTIFIED BY '${config.password}';
+        GRANT SELECT ON \`${config.database}\`.* TO '${config.readonlyUsername}'@'%';
+      `,
   );
 
   MyGlobal.testing = true;
   await MySetupWizard.schema();
 }
+
 main().catch((exp) => {
-  console.log(exp);
+  console.error(exp);
   process.exit(-1);
 });

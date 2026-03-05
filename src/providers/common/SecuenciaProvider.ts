@@ -1,6 +1,10 @@
 import { MyGlobal } from "../../MyGlobal";
 
-export type TipoDocumento = "VENTA" | "ORDEN_COMPRA" | "TRANSFERENCIA" | "AJUSTE_INVENTARIO";
+export type TipoDocumento =
+  | "VENTA"
+  | "ORDEN_COMPRA"
+  | "TRANSFERENCIA"
+  | "AJUSTE_INVENTARIO";
 
 const PREFIJOS: Record<TipoDocumento, string> = {
   VENTA: "VTA",
@@ -23,16 +27,21 @@ export namespace SecuenciaProvider {
       update: {},
     });
 
-    // Atomic increment via raw UPDATE … RETURNING to avoid race conditions
-    // between concurrent processes (e.g. multiple Electron windows).
-    const resultado = await MyGlobal.prisma.$queryRaw<{ ultimo_numero: number }[]>`
-      UPDATE secuencias_documentos
-      SET ultimo_numero = ultimo_numero + 1
-      WHERE almacen_id = ${almacenId}::uuid AND tipo = ${tipo}::"tipo_documento_secuencia"
-      RETURNING ultimo_numero
-    `;
-
-    const numero = Number(resultado[0].ultimo_numero);
+    // MySQL implementation: increment then select in separate queries to avoid multi-statement config bugs
+    let numero: number;
+    await MyGlobal.prisma.$executeRaw`
+        UPDATE secuencias_documentos
+        SET ultimo_numero = ultimo_numero + 1
+        WHERE almacen_id = ${almacenId} AND tipo = ${tipo}
+      `;
+    const resultado = await MyGlobal.prisma.$queryRaw<
+      { ultimo_numero: number }[]
+    >`
+        SELECT ultimo_numero
+        FROM secuencias_documentos
+        WHERE almacen_id = ${almacenId} AND tipo = ${tipo}
+      `;
+    numero = Number(resultado[0].ultimo_numero);
     const prefijo = PREFIJOS[tipo];
     const secuencial = String(numero).padStart(6, "0");
     return `${prefijo}-${almacenCodigo}-${secuencial}`;

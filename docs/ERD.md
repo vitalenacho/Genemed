@@ -9,13 +9,13 @@
 ```mermaid
 erDiagram
 "usuarios" {
-  String id PK
+  String(36) id PK
   String email UK
   String nombre
   String apellido
   String password_hash
   rol_usuario rol
-  String almacen_id FK "nullable"
+  String(36) almacen_id FK "nullable"
   Boolean activo
   DateTime(6) creado_en
   DateTime(6) actualizado_en
@@ -24,7 +24,7 @@ erDiagram
   String actualizado_por
 }
 "almacenes" {
-  String id PK
+  String(36) id PK
   String nombre
   String codigo UK
   tipo_almacen tipo
@@ -39,8 +39,8 @@ erDiagram
   String actualizado_por
 }
 "habilitaciones_almacen" {
-  String id PK
-  String almacen_id FK
+  String(36) id PK
+  String(36) almacen_id FK
   tipo_habilitacion tipo
   String numero_habilitacion
   String organismo_emisor
@@ -55,7 +55,7 @@ erDiagram
   String actualizado_por
 }
 "proveedores" {
-  String id PK
+  String(36) id PK
   String razon_social
   String cuit UK
   String telefono "nullable"
@@ -69,11 +69,11 @@ erDiagram
   String actualizado_por
 }
 "familias_productos" {
-  String id PK
+  String(36) id PK
   String nombre_generico
   String accion_terapeutica "nullable"
   String via_administracion "nullable"
-  String proveedor_id FK
+  String(36) proveedor_id FK
   Boolean activo
   DateTime(6) creado_en
   DateTime(6) actualizado_en
@@ -82,7 +82,7 @@ erDiagram
   String actualizado_por
 }
 "productos" {
-  String id PK
+  String(36) id PK
   String nombre
   String descripcion "nullable"
   String codigo_barras "nullable"
@@ -90,8 +90,8 @@ erDiagram
   String gtin "nullable"
   String clave_cnpm "nullable"
   tipo_venta_producto tipo_venta
-  String proveedor_id FK
-  String familia_id FK "nullable"
+  String(36) proveedor_id FK
+  String(36) familia_id FK "nullable"
   Boolean activo
   DateTime(6) creado_en
   DateTime(6) actualizado_en
@@ -100,8 +100,8 @@ erDiagram
   String actualizado_por
 }
 "precios_productos" {
-  String id PK
-  String producto_id FK
+  String(36) id PK
+  String(36) producto_id FK
   Int alicuota_iva_bps
   BigInt precio_neto
   BigInt precio_final
@@ -115,9 +115,9 @@ erDiagram
   String actualizado_por
 }
 "stocks_almacen" {
-  String id PK
-  String almacen_id FK
-  String producto_id FK
+  String(36) id PK
+  String(36) almacen_id FK
+  String(36) producto_id FK
   Int cantidad
   Int stock_minimo
   DateTime(6) creado_en
@@ -127,8 +127,8 @@ erDiagram
   String actualizado_por
 }
 "lotes_stock" {
-  String id PK
-  String producto_id FK
+  String(36) id PK
+  String(36) producto_id FK
   String numero_lote
   DateTime(6) fecha_vencimiento "nullable"
   Int cantidad
@@ -139,22 +139,22 @@ erDiagram
   String actualizado_por
 }
 "movimientos_stock" {
-  String id PK
-  String almacen_id
-  String producto_id
+  String(36) id PK
+  String(36) almacen_id
+  String(36) producto_id
   tipo_movimiento_stock tipo_movimiento
   Int cantidad
-  String referencia_id "nullable"
+  String(36) referencia_id "nullable"
   String referencia_tipo "nullable"
   String notas "nullable"
   DateTime(6) creado_en
   String creado_por
 }
 "ordenes_compra" {
-  String id PK
+  String(36) id PK
   String numero_orden UK
-  String almacen_id FK
-  String proveedor_id FK
+  String(36) almacen_id FK
+  String(36) proveedor_id FK
   estado_orden_compra estado
   String notas "nullable"
   DateTime(6) fecha_esperada "nullable"
@@ -166,9 +166,9 @@ erDiagram
   String actualizado_por
 }
 "items_ordenes_compra" {
-  String id PK
-  String orden_id FK
-  String producto_id FK
+  String(36) id PK
+  String(36) orden_id FK
+  String(36) producto_id FK
   Int cantidad_pedida
   Int cantidad_recibida
   BigInt precio_unitario
@@ -179,10 +179,10 @@ erDiagram
   String actualizado_por
 }
 "transferencias_almacen" {
-  String id PK
+  String(36) id PK
   String numero_transferencia UK
-  String almacen_origen_id FK
-  String almacen_destino_id FK
+  String(36) almacen_origen_id FK
+  String(36) almacen_destino_id FK
   estado_transferencia estado
   String notas "nullable"
   DateTime(6) enviado_en "nullable"
@@ -194,9 +194,9 @@ erDiagram
   String actualizado_por
 }
 "ventas" {
-  String id PK
+  String(36) id PK
   String numero_venta UK
-  String almacen_id FK
+  String(36) almacen_id FK
   estado_venta estado
   String notas "nullable"
   DateTime(6) vendido_en
@@ -207,9 +207,9 @@ erDiagram
   String actualizado_por
 }
 "items_ventas" {
-  String id PK
-  String venta_id FK
-  String producto_id FK
+  String(36) id PK
+  String(36) venta_id FK
+  String(36) producto_id FK
   Int cantidad
   Int alicuota_iva_bps
   BigInt precio_neto_unitario
@@ -221,9 +221,9 @@ erDiagram
   String actualizado_por
 }
 "ajustes_inventario" {
-  String id PK
+  String(36) id PK
   String numero_ajuste UK
-  String almacen_id FK
+  String(36) almacen_id FK
   estado_ajuste estado
   motivo_ajuste motivo
   String notas "nullable"
@@ -236,10 +236,10 @@ erDiagram
   String actualizado_por
 }
 "items_ajustes_inventario" {
-  String id PK
-  String ajuste_id FK
-  String producto_id FK
-  String lote_id FK "nullable"
+  String(36) id PK
+  String(36) ajuste_id FK
+  String(36) producto_id FK
+  String(36) lote_id FK "nullable"
   Int cantidad_sistema
   Int cantidad_fisica
   Int diferencia
@@ -250,13 +250,13 @@ erDiagram
   String actualizado_por
 }
 "secuencias_documentos" {
-  String id PK
-  String almacen_id FK
+  String(36) id PK
+  String(36) almacen_id FK
   tipo_documento_secuencia tipo
   Int ultimo_numero
 }
 "sincronizaciones_precios" {
-  String id PK
+  String(36) id PK
   DateTime(6) iniciado_en
   DateTime(6) finalizado_en "nullable"
   Int productos_actualizados
@@ -267,11 +267,11 @@ erDiagram
   String creado_por
 }
 "logs_auditoria" {
-  String id PK
-  String usuario_id "nullable"
+  String(36) id PK
+  String(36) usuario_id "nullable"
   String accion
   String entidad
-  String entidad_id "nullable"
+  String(36) entidad_id "nullable"
   Json detalle "nullable"
   String ip "nullable"
   DateTime(6) creado_en

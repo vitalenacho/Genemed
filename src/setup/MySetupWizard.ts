@@ -8,17 +8,27 @@ export namespace MySetupWizard {
       throw new Error(
         "Erron on SetupWizard.schema(): unable to reset database in non-test mode.",
       );
+
+    // build an explicit connection string that includes the database name
+    const env = MyGlobal.env;
+    const schemaFile = "prisma/schema/schema.mysql.prisma";
+
+    const databaseUrl = `mysql://${env.MYSQL_USERNAME}:${env.MYSQL_PASSWORD}@${env.MYSQL_HOST}:${env.MYSQL_PORT}/${env.MYSQL_DATABASE}`;
+
     const execute = (type: string) => (argv: string) =>
-      cp.execSync(
-        `npx prisma migrate ${type} --schema=prisma/schema ${argv}`,
-        { stdio: "inherit" },
-      );
+      cp.execSync(`npx prisma migrate ${type} --schema=${schemaFile} ${argv}`, {
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          DATABASE_URL: databaseUrl,
+          MYSQL_URL: databaseUrl,
+        },
+      });
+
     execute("reset")("--force");
     execute("dev")("--name init");
 
-    await MyGlobal.prisma.$executeRawUnsafe(
-      `GRANT SELECT ON ALL TABLES IN SCHEMA ${MyGlobal.env.POSTGRES_SCHEMA} TO ${MyGlobal.env.POSTGRES_USERNAME_READONLY}`,
-    );
+    // MySQL read‑only privileges are handled by the bootstrap script above
   }
 
   export async function seed(): Promise<void> {}

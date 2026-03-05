@@ -1,4 +1,4 @@
-import { PrismaPg } from "@prisma/adapter-pg";
+// Global configuration and Prisma client for MySQL-only setup.
 import { PrismaClient } from "@prisma/sdk";
 import dotenv from "dotenv";
 import dotenvExpand from "dotenv-expand";
@@ -10,29 +10,39 @@ interface IEnvironments {
   API_PORT: `${number}`;
   SYSTEM_PASSWORD: string;
 
-  POSTGRES_URL: string;
-  POSTGRES_HOST: string;
-  POSTGRES_PORT: `${number}`;
-  POSTGRES_DATABASE: string;
-  POSTGRES_SCHEMA: string;
-  POSTGRES_USERNAME: string;
-  POSTGRES_USERNAME_READONLY: string;
-  POSTGRES_PASSWORD: string;
+  // MySQL configuration only
+  MYSQL_URL: string;
+  MYSQL_HOST: string;
+  MYSQL_PORT: `${number}`;
+  MYSQL_DATABASE: string;
+  MYSQL_USERNAME: string;
+  MYSQL_USERNAME_READONLY: string;
+  MYSQL_PASSWORD: string;
 }
 const envSingleton = new Singleton(() => {
   const env = dotenv.config();
   dotenvExpand.expand(env);
   return typia.assert<IEnvironments>(process.env);
 });
-const prismaSingleton = new Singleton(
-  () =>
-    new PrismaClient({
-      adapter: new PrismaPg(
-        { connectionString: envSingleton.get().POSTGRES_URL },
-        { schema: envSingleton.get().POSTGRES_SCHEMA },
-      ),
-    }),
-);
+const prismaSingleton = new Singleton(() => {
+  const env = envSingleton.get();
+  const url = env.MYSQL_URL;
+
+  // PrismaClient for MySQL requires the URL override so that migrations
+  // and generated clients use the correct connection string.
+  const options: any = {
+    __internal: {
+      configOverride: (config: any) => ({
+        ...config,
+        datasources: {
+          ...config.datasources,
+          db: { ...config.datasources.db, url },
+        },
+      }),
+    },
+  };
+  return new PrismaClient(options);
+});
 
 /**
  * Global variables of the server.

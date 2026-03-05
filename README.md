@@ -64,24 +64,27 @@ Also as you can see from the [package.json](package.json) file, this project req
 
   - https://github.com/features/packages
 
-### 2.2. PostgreSQL
-> ```bash
-> bash postgres.sh
->```
->
-> If you've installed Docker, then run the script above.
-
-Otherwise, visit below PostgreSQL official site and install it manually.
-
-https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
-
-After that, run the `npm run schema <root-account> <password>` command. 
-
-Database schema for BBS backend system would be automatically constructed.
+### 2.2. Database (MySQL)
+This project uses MySQL as its sole database engine. To bring up a local server
+run the provided helper script or invoke Docker directly:
 
 ```bash
-npm run schema postgres root
+bash mysql.sh
+# or
+# docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql:8.0
 ```
+
+After the MySQL server is running, initialise the schema and users using the
+migrations script:
+
+```bash
+npm run schema:mysql root
+```
+
+The Prisma schema file resides at `prisma/schema/schema.mysql.prisma`, and the
+migration files will be created under `prisma/schema/migrations` when the
+command above is executed.  No PostgreSQL artefacts or configuration are used
+in this setup.
 
 ### 2.3. Repository
 From now on, you can start the backend server development, right now. 

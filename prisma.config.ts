@@ -4,9 +4,13 @@ import { defineConfig, env } from "prisma/config";
 
 dotenvExpand.expand(dotenv.config());
 
+// the project now targets MySQL exclusively
+const schemaFile = "prisma/schema/schema.mysql.prisma";
+const datasourceUrl = env("MYSQL_URL");
+
 export default defineConfig({
-  schema: "prisma/schema",
+  schema: schemaFile,
   datasource: {
-    url: env("POSTGRES_URL"),
+    url: datasourceUrl,
   },
 });
