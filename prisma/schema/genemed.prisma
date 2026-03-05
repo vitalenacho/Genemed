@@ -1,10 +1,421 @@
-// =============================================================================
-// GENEMED — Pharmacy Management System
-// =============================================================================
+generator client {
+  provider        = "prisma-client"
+  output          = "../../src/prisma"
+  previewFeatures = ["postgresqlExtensions", "views"]
+}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ENUMS
-// ─────────────────────────────────────────────────────────────────────────────
+generator markdown {
+  provider = "prisma-markdown"
+  output   = "../../docs/ERD.md"
+  title    = "PROJECT"
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pg_trgm]
+}
+
+/// Usuario del sistema GENEMED
+model usuario {
+  id              String      @id @default(uuid()) @db.Uuid
+  email           String      @unique @db.VarChar
+  nombre          String      @db.VarChar
+  apellido        String      @db.VarChar
+  password_hash   String      @db.VarChar
+  rol             rol_usuario
+  almacen_id      String?     @db.Uuid
+  activo          Boolean     @default(true)
+  creado_en       DateTime    @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime    @updatedAt @db.Timestamptz(6)
+  eliminado_en    DateTime?   @db.Timestamptz(6)
+  creado_por      String      @db.VarChar
+  actualizado_por String      @db.VarChar
+  almacen         almacen?    @relation(fields: [almacen_id], references: [id])
+
+  @@map("usuarios")
+}
+
+/// Almacén (farmacia, droguería o depósito)
+model almacen {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  nombre                 String                  @db.VarChar
+  codigo                 String                  @unique @db.VarChar
+  tipo                   tipo_almacen
+  direccion              String?                 @db.VarChar
+  telefono               String?                 @db.VarChar
+  email                  String?                 @db.VarChar
+  activo                 Boolean                 @default(true)
+  creado_en              DateTime                @default(now()) @db.Timestamptz(6)
+  actualizado_en         DateTime                @updatedAt @db.Timestamptz(6)
+  eliminado_en           DateTime?               @db.Timestamptz(6)
+  creado_por             String                  @db.VarChar
+  actualizado_por        String                  @db.VarChar
+  ajustes_inventario     ajuste_inventario[]
+  habilitaciones         habilitacion_almacen[]
+  ordenes_compra         orden_compra[]
+  secuencias             secuencia_documento[]
+  stocks                 stock_almacen[]
+  transferencias_destino transferencia_almacen[] @relation("transferencias_destino")
+  transferencias_origen  transferencia_almacen[] @relation("transferencias_origen")
+  usuarios               usuario[]
+  ventas                 venta[]
+
+  @@map("almacenes")
+}
+
+/// Habilitación oficial de un almacén
+model habilitacion_almacen {
+  id                  String            @id @default(uuid()) @db.Uuid
+  almacen_id          String            @db.Uuid
+  tipo                tipo_habilitacion
+  numero_habilitacion String            @db.VarChar
+  organismo_emisor    String            @db.VarChar
+  fecha_emision       DateTime          @db.Timestamptz(6)
+  fecha_vencimiento   DateTime          @db.Timestamptz(6)
+  archivo_url         String?           @db.VarChar
+  notas               String?
+  creado_en           DateTime          @default(now()) @db.Timestamptz(6)
+  actualizado_en      DateTime          @updatedAt @db.Timestamptz(6)
+  eliminado_en        DateTime?         @db.Timestamptz(6)
+  creado_por          String            @db.VarChar
+  actualizado_por     String            @db.VarChar
+  almacen             almacen           @relation(fields: [almacen_id], references: [id])
+
+  @@map("habilitaciones_almacen")
+}
+
+/// Proveedor (laboratorio o distribuidor)
+model proveedor {
+  id              String             @id @default(uuid()) @db.Uuid
+  razon_social    String             @db.VarChar
+  cuit            String             @unique @db.VarChar
+  telefono        String?            @db.VarChar
+  email           String?            @db.VarChar
+  direccion       String?            @db.VarChar
+  activo          Boolean            @default(true)
+  creado_en       DateTime           @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime           @updatedAt @db.Timestamptz(6)
+  eliminado_en    DateTime?          @db.Timestamptz(6)
+  creado_por      String             @db.VarChar
+  actualizado_por String             @db.VarChar
+  familias        familia_producto[]
+  ordenes_compra  orden_compra[]
+  productos       producto[]
+
+  @@map("proveedores")
+}
+
+/// Familia de productos (producto padre: agrupa presentaciones del mismo medicamento)
+model familia_producto {
+  id                 String     @id @default(uuid()) @db.Uuid
+  nombre_generico    String     @db.VarChar
+  accion_terapeutica String?    @db.VarChar
+  via_administracion String?    @db.VarChar
+  proveedor_id       String     @db.Uuid
+  activo             Boolean    @default(true)
+  creado_en          DateTime   @default(now()) @db.Timestamptz(6)
+  actualizado_en     DateTime   @updatedAt @db.Timestamptz(6)
+  eliminado_en       DateTime?  @db.Timestamptz(6)
+  creado_por         String     @db.VarChar
+  actualizado_por    String     @db.VarChar
+  proveedor          proveedor  @relation(fields: [proveedor_id], references: [id])
+  productos          producto[]
+
+  @@map("familias_productos")
+}
+
+/// Producto farmacéutico
+model producto {
+  id              String                   @id @default(uuid()) @db.Uuid
+  nombre          String                   @db.VarChar
+  descripcion     String?
+  codigo_barras   String?                  @db.VarChar
+  troquel         String?                  @db.VarChar
+  gtin            String?                  @db.VarChar
+  clave_cnpm      String?                  @db.VarChar
+  tipo_venta      tipo_venta_producto
+  proveedor_id    String                   @db.Uuid
+  familia_id      String?                  @db.Uuid
+  activo          Boolean                  @default(true)
+  creado_en       DateTime                 @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime                 @updatedAt @db.Timestamptz(6)
+  eliminado_en    DateTime?                @db.Timestamptz(6)
+  creado_por      String                   @db.VarChar
+  actualizado_por String                   @db.VarChar
+  items_ajuste    item_ajuste_inventario[]
+  items_orden     item_orden_compra[]
+  items_venta     item_venta[]
+  lotes           lote_stock[]
+  precios         precio_producto[]
+  familia         familia_producto?        @relation(fields: [familia_id], references: [id])
+  proveedor       proveedor                @relation(fields: [proveedor_id], references: [id])
+  stocks          stock_almacen[]
+
+  @@map("productos")
+}
+
+/// Precio de un producto (histórico con vigencia)
+model precio_producto {
+  id               String    @id @default(uuid()) @db.Uuid
+  producto_id      String    @db.Uuid
+  /// Alícuota de IVA en basis points (0 = exento, 1050 = 10.5%)
+  alicuota_iva_bps Int       @default(0)
+  /// Precio sin IVA en centavos
+  precio_neto      BigInt
+  /// Precio con IVA en centavos
+  precio_final     BigInt
+  vigente_desde    DateTime  @db.Timestamptz(6)
+  vigente_hasta    DateTime? @db.Timestamptz(6)
+  fuente           String?   @db.VarChar
+  creado_en        DateTime  @default(now()) @db.Timestamptz(6)
+  actualizado_en   DateTime  @updatedAt @db.Timestamptz(6)
+  eliminado_en     DateTime? @db.Timestamptz(6)
+  creado_por       String    @db.VarChar
+  actualizado_por  String    @db.VarChar
+  producto         producto  @relation(fields: [producto_id], references: [id])
+
+  @@map("precios_productos")
+}
+
+/// Stock de un producto en un almacén
+model stock_almacen {
+  id              String    @id @default(uuid()) @db.Uuid
+  almacen_id      String    @db.Uuid
+  producto_id     String    @db.Uuid
+  cantidad        Int       @default(0)
+  stock_minimo    Int       @default(0)
+  creado_en       DateTime  @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime  @updatedAt @db.Timestamptz(6)
+  eliminado_en    DateTime? @db.Timestamptz(6)
+  creado_por      String    @db.VarChar
+  actualizado_por String    @db.VarChar
+  almacen         almacen   @relation(fields: [almacen_id], references: [id])
+  producto        producto  @relation(fields: [producto_id], references: [id])
+
+  @@unique([almacen_id, producto_id])
+  @@map("stocks_almacen")
+}
+
+/// Lote de stock (con vencimiento y trazabilidad)
+model lote_stock {
+  id                String                   @id @default(uuid()) @db.Uuid
+  producto_id       String                   @db.Uuid
+  numero_lote       String                   @db.VarChar
+  fecha_vencimiento DateTime?                @db.Timestamptz(6)
+  cantidad          Int                      @default(0)
+  creado_en         DateTime                 @default(now()) @db.Timestamptz(6)
+  actualizado_en    DateTime                 @updatedAt @db.Timestamptz(6)
+  eliminado_en      DateTime?                @db.Timestamptz(6)
+  creado_por        String                   @db.VarChar
+  actualizado_por   String                   @db.VarChar
+  items_ajuste      item_ajuste_inventario[]
+  producto          producto                 @relation(fields: [producto_id], references: [id])
+
+  @@map("lotes_stock")
+}
+
+/// Movimiento de stock (inmutable, nunca soft delete)
+model movimiento_stock {
+  id              String                @id @default(uuid()) @db.Uuid
+  almacen_id      String                @db.Uuid
+  producto_id     String                @db.Uuid
+  tipo_movimiento tipo_movimiento_stock
+  cantidad        Int
+  referencia_id   String?               @db.Uuid
+  referencia_tipo String?               @db.VarChar
+  notas           String?
+  creado_en       DateTime              @default(now()) @db.Timestamptz(6)
+  creado_por      String                @db.VarChar
+
+  @@map("movimientos_stock")
+}
+
+/// Orden de compra a proveedor
+model orden_compra {
+  id              String              @id @default(uuid()) @db.Uuid
+  numero_orden    String              @unique @db.VarChar
+  almacen_id      String              @db.Uuid
+  proveedor_id    String              @db.Uuid
+  estado          estado_orden_compra
+  notas           String?
+  fecha_esperada  DateTime?           @db.Timestamptz(6)
+  recibido_en     DateTime?           @db.Timestamptz(6)
+  creado_en       DateTime            @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime            @updatedAt @db.Timestamptz(6)
+  eliminado_en    DateTime?           @db.Timestamptz(6)
+  creado_por      String              @db.VarChar
+  actualizado_por String              @db.VarChar
+  items           item_orden_compra[]
+  almacen         almacen             @relation(fields: [almacen_id], references: [id])
+  proveedor       proveedor           @relation(fields: [proveedor_id], references: [id])
+
+  @@map("ordenes_compra")
+}
+
+/// Ítem de una orden de compra
+model item_orden_compra {
+  id                String       @id @default(uuid()) @db.Uuid
+  orden_id          String       @db.Uuid
+  producto_id       String       @db.Uuid
+  cantidad_pedida   Int
+  cantidad_recibida Int          @default(0)
+  precio_unitario   BigInt
+  creado_en         DateTime     @default(now()) @db.Timestamptz(6)
+  actualizado_en    DateTime     @updatedAt @db.Timestamptz(6)
+  eliminado_en      DateTime?    @db.Timestamptz(6)
+  creado_por        String       @db.VarChar
+  actualizado_por   String       @db.VarChar
+  orden             orden_compra @relation(fields: [orden_id], references: [id])
+  producto          producto     @relation(fields: [producto_id], references: [id])
+
+  @@map("items_ordenes_compra")
+}
+
+/// Transferencia de stock entre almacenes
+model transferencia_almacen {
+  id                   String               @id @default(uuid()) @db.Uuid
+  numero_transferencia String               @unique @db.VarChar
+  almacen_origen_id    String               @db.Uuid
+  almacen_destino_id   String               @db.Uuid
+  estado               estado_transferencia
+  notas                String?
+  enviado_en           DateTime?            @db.Timestamptz(6)
+  recibido_en          DateTime?            @db.Timestamptz(6)
+  creado_en            DateTime             @default(now()) @db.Timestamptz(6)
+  actualizado_en       DateTime             @updatedAt @db.Timestamptz(6)
+  eliminado_en         DateTime?            @db.Timestamptz(6)
+  creado_por           String               @db.VarChar
+  actualizado_por      String               @db.VarChar
+  almacen_destino      almacen              @relation("transferencias_destino", fields: [almacen_destino_id], references: [id])
+  almacen_origen       almacen              @relation("transferencias_origen", fields: [almacen_origen_id], references: [id])
+
+  @@map("transferencias_almacen")
+}
+
+/// Venta (cabecera)
+model venta {
+  id              String       @id @default(uuid()) @db.Uuid
+  numero_venta    String       @unique @db.VarChar
+  almacen_id      String       @db.Uuid
+  estado          estado_venta
+  notas           String?
+  vendido_en      DateTime     @default(now()) @db.Timestamptz(6)
+  creado_en       DateTime     @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime     @updatedAt @db.Timestamptz(6)
+  eliminado_en    DateTime?    @db.Timestamptz(6)
+  creado_por      String       @db.VarChar
+  actualizado_por String       @db.VarChar
+  items           item_venta[]
+  almacen         almacen      @relation(fields: [almacen_id], references: [id])
+
+  @@map("ventas")
+}
+
+/// Ítem de una venta
+model item_venta {
+  id                    String    @id @default(uuid()) @db.Uuid
+  venta_id              String    @db.Uuid
+  producto_id           String    @db.Uuid
+  cantidad              Int
+  /// Alícuota de IVA en basis points (snapshot al momento de la venta)
+  alicuota_iva_bps      Int
+  /// Precio neto unitario en centavos (snapshot)
+  precio_neto_unitario  BigInt
+  /// Precio final unitario en centavos (snapshot)
+  precio_final_unitario BigInt
+  creado_en             DateTime  @default(now()) @db.Timestamptz(6)
+  actualizado_en        DateTime  @updatedAt @db.Timestamptz(6)
+  eliminado_en          DateTime? @db.Timestamptz(6)
+  creado_por            String    @db.VarChar
+  actualizado_por       String    @db.VarChar
+  producto              producto  @relation(fields: [producto_id], references: [id])
+  venta                 venta     @relation(fields: [venta_id], references: [id])
+
+  @@map("items_ventas")
+}
+
+/// Cabecera de un ajuste de inventario (recuento físico)
+model ajuste_inventario {
+  id              String                   @id @default(uuid()) @db.Uuid
+  numero_ajuste   String                   @unique @db.VarChar
+  almacen_id      String                   @db.Uuid
+  estado          estado_ajuste
+  motivo          motivo_ajuste
+  notas           String?
+  iniciado_en     DateTime?                @db.Timestamptz(6)
+  confirmado_en   DateTime?                @db.Timestamptz(6)
+  creado_en       DateTime                 @default(now()) @db.Timestamptz(6)
+  actualizado_en  DateTime                 @updatedAt @db.Timestamptz(6)
+  eliminado_en    DateTime?                @db.Timestamptz(6)
+  creado_por      String                   @db.VarChar
+  actualizado_por String                   @db.VarChar
+  almacen         almacen                  @relation(fields: [almacen_id], references: [id])
+  items           item_ajuste_inventario[]
+
+  @@map("ajustes_inventario")
+}
+
+/// Línea de ajuste de inventario
+model item_ajuste_inventario {
+  id               String            @id @default(uuid()) @db.Uuid
+  ajuste_id        String            @db.Uuid
+  producto_id      String            @db.Uuid
+  lote_id          String?           @db.Uuid
+  cantidad_sistema Int
+  cantidad_fisica  Int
+  diferencia       Int
+  creado_en        DateTime          @default(now()) @db.Timestamptz(6)
+  actualizado_en   DateTime          @updatedAt @db.Timestamptz(6)
+  eliminado_en     DateTime?         @db.Timestamptz(6)
+  creado_por       String            @db.VarChar
+  actualizado_por  String            @db.VarChar
+  ajuste           ajuste_inventario @relation(fields: [ajuste_id], references: [id])
+  lote             lote_stock?       @relation(fields: [lote_id], references: [id])
+  producto         producto          @relation(fields: [producto_id], references: [id])
+
+  @@map("items_ajustes_inventario")
+}
+
+/// Secuencia atómica por tipo de documento y almacén
+model secuencia_documento {
+  id            String                   @id @default(uuid()) @db.Uuid
+  almacen_id    String                   @db.Uuid
+  tipo          tipo_documento_secuencia
+  ultimo_numero Int                      @default(0)
+  almacen       almacen                  @relation(fields: [almacen_id], references: [id])
+
+  @@unique([almacen_id, tipo])
+  @@map("secuencias_documentos")
+}
+
+/// Registro de sincronización de precios con CNPM
+model sincronizacion_precios {
+  id                     String    @id @default(uuid()) @db.Uuid
+  iniciado_en            DateTime  @db.Timestamptz(6)
+  finalizado_en          DateTime? @db.Timestamptz(6)
+  productos_actualizados Int       @default(0)
+  productos_nuevos       Int       @default(0)
+  errores                Int       @default(0)
+  detalle                Json?
+  creado_en              DateTime  @default(now()) @db.Timestamptz(6)
+  creado_por             String    @db.VarChar
+
+  @@map("sincronizaciones_precios")
+}
+
+/// Log de auditoría de operaciones críticas persistido en DB (inmutable)
+model log_auditoria {
+  id         String   @id @default(uuid()) @db.Uuid
+  usuario_id String?  @db.Uuid
+  accion     String   @db.VarChar
+  entidad    String   @db.VarChar
+  entidad_id String?  @db.Uuid
+  detalle    Json?
+  ip         String?  @db.VarChar
+  creado_en  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("logs_auditoria")
+}
 
 enum rol_usuario {
   SUPER_ADMIN
@@ -87,467 +498,4 @@ enum tipo_documento_secuencia {
   ORDEN_COMPRA
   TRANSFERENCIA
   AJUSTE_INVENTARIO
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// USERS & AUTH
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Usuario del sistema GENEMED
-model usuario {
-  id              String      @id @default(uuid()) @db.Uuid
-  email           String      @unique @db.VarChar
-  nombre          String      @db.VarChar
-  apellido        String      @db.VarChar
-  password_hash   String      @db.VarChar
-  rol             rol_usuario
-  almacen_id      String?     @db.Uuid
-  activo          Boolean     @default(true)
-  creado_en       DateTime    @default(now()) @db.Timestamptz
-  actualizado_en  DateTime    @updatedAt @db.Timestamptz
-  eliminado_en    DateTime?   @db.Timestamptz
-  creado_por      String      @db.VarChar
-  actualizado_por String      @db.VarChar
-
-  almacen         almacen?    @relation(fields: [almacen_id], references: [id])
-
-  @@map("usuarios")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ALMACENES
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Almacén (farmacia, droguería o depósito)
-model almacen {
-  id              String      @id @default(uuid()) @db.Uuid
-  nombre          String      @db.VarChar
-  codigo          String      @unique @db.VarChar
-  tipo            tipo_almacen
-  direccion       String?     @db.VarChar
-  telefono        String?     @db.VarChar
-  email           String?     @db.VarChar
-  activo          Boolean     @default(true)
-  creado_en       DateTime    @default(now()) @db.Timestamptz
-  actualizado_en  DateTime    @updatedAt @db.Timestamptz
-  eliminado_en    DateTime?   @db.Timestamptz
-  creado_por      String      @db.VarChar
-  actualizado_por String      @db.VarChar
-
-  usuarios              usuario[]
-  stocks                stock_almacen[]
-  ordenes_compra        orden_compra[]
-  transferencias_origen transferencia_almacen[] @relation("transferencias_origen")
-  transferencias_destino transferencia_almacen[] @relation("transferencias_destino")
-  ventas                venta[]
-  habilitaciones        habilitacion_almacen[]
-  ajustes_inventario    ajuste_inventario[]
-  secuencias            secuencia_documento[]
-
-  @@map("almacenes")
-}
-
-/// Habilitación oficial de un almacén
-model habilitacion_almacen {
-  id                  String            @id @default(uuid()) @db.Uuid
-  almacen_id          String            @db.Uuid
-  tipo                tipo_habilitacion
-  numero_habilitacion String            @db.VarChar
-  organismo_emisor    String            @db.VarChar
-  fecha_emision       DateTime          @db.Timestamptz
-  fecha_vencimiento   DateTime          @db.Timestamptz
-  archivo_url         String?           @db.VarChar
-  notas               String?
-  creado_en           DateTime          @default(now()) @db.Timestamptz
-  actualizado_en      DateTime          @updatedAt @db.Timestamptz
-  eliminado_en        DateTime?         @db.Timestamptz
-  creado_por          String            @db.VarChar
-  actualizado_por     String            @db.VarChar
-
-  almacen             almacen           @relation(fields: [almacen_id], references: [id])
-
-  @@map("habilitaciones_almacen")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PROVEEDORES & PRODUCTOS
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Proveedor (laboratorio o distribuidor)
-model proveedor {
-  id              String    @id @default(uuid()) @db.Uuid
-  razon_social    String    @db.VarChar
-  cuit            String    @unique @db.VarChar
-  telefono        String?   @db.VarChar
-  email           String?   @db.VarChar
-  direccion       String?   @db.VarChar
-  activo          Boolean   @default(true)
-  creado_en       DateTime  @default(now()) @db.Timestamptz
-  actualizado_en  DateTime  @updatedAt @db.Timestamptz
-  eliminado_en    DateTime? @db.Timestamptz
-  creado_por      String    @db.VarChar
-  actualizado_por String    @db.VarChar
-
-  familias        familia_producto[]
-  productos       producto[]
-  ordenes_compra  orden_compra[]
-
-  @@map("proveedores")
-}
-
-/// Familia de productos (producto padre: agrupa presentaciones del mismo medicamento)
-model familia_producto {
-  id                  String    @id @default(uuid()) @db.Uuid
-  nombre_generico     String    @db.VarChar
-  accion_terapeutica  String?   @db.VarChar
-  via_administracion  String?   @db.VarChar
-  proveedor_id        String    @db.Uuid
-  activo              Boolean   @default(true)
-  creado_en           DateTime  @default(now()) @db.Timestamptz
-  actualizado_en      DateTime  @updatedAt @db.Timestamptz
-  eliminado_en        DateTime? @db.Timestamptz
-  creado_por          String    @db.VarChar
-  actualizado_por     String    @db.VarChar
-
-  proveedor           proveedor @relation(fields: [proveedor_id], references: [id])
-  productos           producto[]
-
-  @@map("familias_productos")
-}
-
-/// Producto farmacéutico
-model producto {
-  id              String              @id @default(uuid()) @db.Uuid
-  nombre          String              @db.VarChar
-  descripcion     String?
-  codigo_barras   String?             @db.VarChar
-  troquel         String?             @db.VarChar
-  gtin            String?             @db.VarChar
-  clave_cnpm      String?             @db.VarChar
-  tipo_venta      tipo_venta_producto
-  proveedor_id    String              @db.Uuid
-  familia_id      String?             @db.Uuid
-  activo          Boolean             @default(true)
-  creado_en       DateTime            @default(now()) @db.Timestamptz
-  actualizado_en  DateTime            @updatedAt @db.Timestamptz
-  eliminado_en    DateTime?           @db.Timestamptz
-  creado_por      String              @db.VarChar
-  actualizado_por String              @db.VarChar
-
-  proveedor       proveedor           @relation(fields: [proveedor_id], references: [id])
-  familia         familia_producto?   @relation(fields: [familia_id], references: [id])
-  precios         precio_producto[]
-  stocks          stock_almacen[]
-  lotes           lote_stock[]
-  items_orden     item_orden_compra[]
-  items_venta     item_venta[]
-  items_ajuste    item_ajuste_inventario[]
-
-  @@map("productos")
-}
-
-/// Precio de un producto (histórico con vigencia)
-model precio_producto {
-  id              String    @id @default(uuid()) @db.Uuid
-  producto_id     String    @db.Uuid
-  /// Alícuota de IVA en basis points (0 = exento, 1050 = 10.5%)
-  alicuota_iva_bps Int      @default(0)
-  /// Precio sin IVA en centavos
-  precio_neto     BigInt
-  /// Precio con IVA en centavos
-  precio_final    BigInt
-  vigente_desde   DateTime  @db.Timestamptz
-  vigente_hasta   DateTime? @db.Timestamptz
-  fuente          String?   @db.VarChar
-  creado_en       DateTime  @default(now()) @db.Timestamptz
-  actualizado_en  DateTime  @updatedAt @db.Timestamptz
-  eliminado_en    DateTime? @db.Timestamptz
-  creado_por      String    @db.VarChar
-  actualizado_por String    @db.VarChar
-
-  producto        producto  @relation(fields: [producto_id], references: [id])
-
-  @@map("precios_productos")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STOCK
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Stock de un producto en un almacén
-model stock_almacen {
-  id              String    @id @default(uuid()) @db.Uuid
-  almacen_id      String    @db.Uuid
-  producto_id     String    @db.Uuid
-  cantidad        Int       @default(0)
-  stock_minimo    Int       @default(0)
-  creado_en       DateTime  @default(now()) @db.Timestamptz
-  actualizado_en  DateTime  @updatedAt @db.Timestamptz
-  eliminado_en    DateTime? @db.Timestamptz
-  creado_por      String    @db.VarChar
-  actualizado_por String    @db.VarChar
-
-  almacen         almacen   @relation(fields: [almacen_id], references: [id])
-  producto        producto  @relation(fields: [producto_id], references: [id])
-
-  @@unique([almacen_id, producto_id])
-  @@map("stocks_almacen")
-}
-
-/// Lote de stock (con vencimiento y trazabilidad)
-model lote_stock {
-  id              String    @id @default(uuid()) @db.Uuid
-  producto_id     String    @db.Uuid
-  numero_lote     String    @db.VarChar
-  fecha_vencimiento DateTime? @db.Timestamptz
-  cantidad        Int       @default(0)
-  creado_en       DateTime  @default(now()) @db.Timestamptz
-  actualizado_en  DateTime  @updatedAt @db.Timestamptz
-  eliminado_en    DateTime? @db.Timestamptz
-  creado_por      String    @db.VarChar
-  actualizado_por String    @db.VarChar
-
-  producto        producto  @relation(fields: [producto_id], references: [id])
-  items_ajuste    item_ajuste_inventario[]
-
-  @@map("lotes_stock")
-}
-
-/// Movimiento de stock (inmutable, nunca soft delete)
-model movimiento_stock {
-  id              String                @id @default(uuid()) @db.Uuid
-  almacen_id      String                @db.Uuid
-  producto_id     String                @db.Uuid
-  tipo_movimiento tipo_movimiento_stock
-  cantidad        Int
-  referencia_id   String?               @db.Uuid
-  referencia_tipo String?               @db.VarChar
-  notas           String?
-  creado_en       DateTime              @default(now()) @db.Timestamptz
-  creado_por      String                @db.VarChar
-
-  @@map("movimientos_stock")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPRAS
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Orden de compra a proveedor
-model orden_compra {
-  id              String              @id @default(uuid()) @db.Uuid
-  numero_orden    String              @unique @db.VarChar
-  almacen_id      String              @db.Uuid
-  proveedor_id    String              @db.Uuid
-  estado          estado_orden_compra
-  notas           String?
-  fecha_esperada  DateTime?           @db.Timestamptz
-  recibido_en     DateTime?           @db.Timestamptz
-  creado_en       DateTime            @default(now()) @db.Timestamptz
-  actualizado_en  DateTime            @updatedAt @db.Timestamptz
-  eliminado_en    DateTime?           @db.Timestamptz
-  creado_por      String              @db.VarChar
-  actualizado_por String              @db.VarChar
-
-  almacen         almacen             @relation(fields: [almacen_id], references: [id])
-  proveedor       proveedor           @relation(fields: [proveedor_id], references: [id])
-  items           item_orden_compra[]
-
-  @@map("ordenes_compra")
-}
-
-/// Ítem de una orden de compra
-model item_orden_compra {
-  id              String       @id @default(uuid()) @db.Uuid
-  orden_id        String       @db.Uuid
-  producto_id     String       @db.Uuid
-  cantidad_pedida Int
-  cantidad_recibida Int        @default(0)
-  precio_unitario BigInt
-  creado_en       DateTime     @default(now()) @db.Timestamptz
-  actualizado_en  DateTime     @updatedAt @db.Timestamptz
-  eliminado_en    DateTime?    @db.Timestamptz
-  creado_por      String       @db.VarChar
-  actualizado_por String       @db.VarChar
-
-  orden           orden_compra @relation(fields: [orden_id], references: [id])
-  producto        producto     @relation(fields: [producto_id], references: [id])
-
-  @@map("items_ordenes_compra")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TRANSFERENCIAS
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Transferencia de stock entre almacenes
-model transferencia_almacen {
-  id                  String               @id @default(uuid()) @db.Uuid
-  numero_transferencia String              @unique @db.VarChar
-  almacen_origen_id   String              @db.Uuid
-  almacen_destino_id  String              @db.Uuid
-  estado              estado_transferencia
-  notas               String?
-  enviado_en          DateTime?            @db.Timestamptz
-  recibido_en         DateTime?            @db.Timestamptz
-  creado_en           DateTime             @default(now()) @db.Timestamptz
-  actualizado_en      DateTime             @updatedAt @db.Timestamptz
-  eliminado_en        DateTime?            @db.Timestamptz
-  creado_por          String               @db.VarChar
-  actualizado_por     String               @db.VarChar
-
-  almacen_origen      almacen              @relation("transferencias_origen", fields: [almacen_origen_id], references: [id])
-  almacen_destino     almacen              @relation("transferencias_destino", fields: [almacen_destino_id], references: [id])
-
-  @@map("transferencias_almacen")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// VENTAS
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Venta (cabecera)
-model venta {
-  id              String       @id @default(uuid()) @db.Uuid
-  numero_venta    String       @unique @db.VarChar
-  almacen_id      String       @db.Uuid
-  estado          estado_venta
-  notas           String?
-  vendido_en      DateTime     @default(now()) @db.Timestamptz
-  creado_en       DateTime     @default(now()) @db.Timestamptz
-  actualizado_en  DateTime     @updatedAt @db.Timestamptz
-  eliminado_en    DateTime?    @db.Timestamptz
-  creado_por      String       @db.VarChar
-  actualizado_por String       @db.VarChar
-
-  almacen         almacen      @relation(fields: [almacen_id], references: [id])
-  items           item_venta[]
-
-  @@map("ventas")
-}
-
-/// Ítem de una venta
-model item_venta {
-  id                      String    @id @default(uuid()) @db.Uuid
-  venta_id                String    @db.Uuid
-  producto_id             String    @db.Uuid
-  cantidad                Int
-  /// Alícuota de IVA en basis points (snapshot al momento de la venta)
-  alicuota_iva_bps        Int
-  /// Precio neto unitario en centavos (snapshot)
-  precio_neto_unitario    BigInt
-  /// Precio final unitario en centavos (snapshot)
-  precio_final_unitario   BigInt
-  creado_en               DateTime  @default(now()) @db.Timestamptz
-  actualizado_en          DateTime  @updatedAt @db.Timestamptz
-  eliminado_en            DateTime? @db.Timestamptz
-  creado_por              String    @db.VarChar
-  actualizado_por         String    @db.VarChar
-
-  venta                   venta     @relation(fields: [venta_id], references: [id])
-  producto                producto  @relation(fields: [producto_id], references: [id])
-
-  @@map("items_ventas")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AJUSTES DE INVENTARIO
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Cabecera de un ajuste de inventario (recuento físico)
-model ajuste_inventario {
-  id               String                   @id @default(uuid()) @db.Uuid
-  numero_ajuste    String                   @unique @db.VarChar
-  almacen_id       String                   @db.Uuid
-  estado           estado_ajuste
-  motivo           motivo_ajuste
-  notas            String?
-  iniciado_en      DateTime?                @db.Timestamptz
-  confirmado_en    DateTime?                @db.Timestamptz
-  creado_en        DateTime                 @default(now()) @db.Timestamptz
-  actualizado_en   DateTime                 @updatedAt @db.Timestamptz
-  eliminado_en     DateTime?                @db.Timestamptz
-  creado_por       String                   @db.VarChar
-  actualizado_por  String                   @db.VarChar
-
-  almacen          almacen                  @relation(fields: [almacen_id], references: [id])
-  items            item_ajuste_inventario[]
-
-  @@map("ajustes_inventario")
-}
-
-/// Línea de ajuste de inventario
-model item_ajuste_inventario {
-  id                String            @id @default(uuid()) @db.Uuid
-  ajuste_id         String            @db.Uuid
-  producto_id       String            @db.Uuid
-  lote_id           String?           @db.Uuid
-  cantidad_sistema  Int
-  cantidad_fisica   Int
-  diferencia        Int
-  creado_en         DateTime          @default(now()) @db.Timestamptz
-  actualizado_en    DateTime          @updatedAt @db.Timestamptz
-  eliminado_en      DateTime?         @db.Timestamptz
-  creado_por        String            @db.VarChar
-  actualizado_por   String            @db.VarChar
-
-  ajuste            ajuste_inventario @relation(fields: [ajuste_id], references: [id])
-  producto          producto          @relation(fields: [producto_id], references: [id])
-  lote              lote_stock?       @relation(fields: [lote_id], references: [id])
-
-  @@map("items_ajustes_inventario")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SECUENCIAS DE DOCUMENTOS
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Secuencia atómica por tipo de documento y almacén
-model secuencia_documento {
-  id            String                    @id @default(uuid()) @db.Uuid
-  almacen_id    String                    @db.Uuid
-  tipo          tipo_documento_secuencia
-  ultimo_numero Int                       @default(0)
-
-  almacen       almacen                   @relation(fields: [almacen_id], references: [id])
-
-  @@unique([almacen_id, tipo])
-  @@map("secuencias_documentos")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SINCRONIZACIÓN CNPM
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Registro de sincronización de precios con CNPM
-model sincronizacion_precios {
-  id              String    @id @default(uuid()) @db.Uuid
-  iniciado_en     DateTime  @db.Timestamptz
-  finalizado_en   DateTime? @db.Timestamptz
-  productos_actualizados Int @default(0)
-  productos_nuevos Int      @default(0)
-  errores         Int       @default(0)
-  detalle         Json?
-  creado_en       DateTime  @default(now()) @db.Timestamptz
-  creado_por      String    @db.VarChar
-
-  @@map("sincronizaciones_precios")
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LOG DE AUDITORÍA
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Log de auditoría de operaciones críticas persistido en DB (inmutable)
-model log_auditoria {
-  id          String    @id @default(uuid()) @db.Uuid
-  usuario_id  String?   @db.Uuid
-  accion      String    @db.VarChar
-  entidad     String    @db.VarChar
-  entidad_id  String?   @db.Uuid
-  detalle     Json?
-  ip          String?   @db.VarChar
-  creado_en   DateTime  @default(now()) @db.Timestamptz
-
-  @@map("logs_auditoria")
 }

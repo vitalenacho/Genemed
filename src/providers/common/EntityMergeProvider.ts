@@ -24,7 +24,7 @@ export namespace EntityMergeProvider {
       // FIND MATCHED RECORDS
       const count: number = finder
         ? await finder(input)
-        : await (MyGlobal.prisma[table] as any).count({
+        : await ((MyGlobal.prisma as any)[table] as any).count({
             where: {
               [primary.name]: {
                 in: [input.keep, ...input.absorbed],
